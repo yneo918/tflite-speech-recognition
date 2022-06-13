@@ -32,21 +32,25 @@ Getting Started
 First, download and unzip the [Google Speech Commands dataset](https://storage.cloud.google.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz) on your computer. Since this example uses the Google Speech Commands dataset, I am required (and gratefully so) to give them credit for collecting and releasing this data for everyone to use. To learn more about it (and even contribute samples of your own voice!), please see [this page](https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md).
 
 Open **01-speech-commands-mfcc-extraction** in Jupyter Notebook. Change the `dataset_path` variable to point to the location of the unzipped Google Speech Commands dataset directory on your computer. Run the entire script. The script will convert all speech samples (excluding the _background_noise_ set) to their [Mel Frequency Cepstral Coefficients](http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/) (MFCCs), divide them into training, validation, and test sets, and save them as tensors in a file named `all_targets_mfcc_sets.npz`.
+
 データセットに含まれる音声データをMFCC（メル周波数ケプストラル係数）に変換し、`all_targets_mfcc_sets.npz`に保存する。
 MFCCは音声を2次元画像に変換したものであり、この例では16x16の白黒画像=16x16のfloatのnumpy行列で表現している。（例ではわかりやすく色が付けてある。）
 この時、一部の時間の短いデータはDropされることで、16x16へ変換できないようなデータは省かれている。
 
 Next, open **02-speech-commands-mfcc-classifier** in Jupyter Notebook and change the `dataset_path` variable to point to the location of the unzipped Google Speech Commands dataset directory. Also, change the `feature_sets_path` variable to point to the directory location of the `all_targets_mfcc_sets.npz` file.  Feel free to change the `wake_word` variable to any other wake word available in the Speech Commands dataset. Run the entire script. It will read the MFCCs from the file made in the first script, build a CNN (credit goes to [this GeeksforGeeks article](https://www.geeksforgeeks.org/python-image-classification-using-keras/) for the CNN structure), and train it using the training features we created (MFCCs). The script will then save the model in the `wake_word_stop_model.h5` file.
+
 ここでは、先ほどの`all_targets_mfcc_sets.npz`を用いて学習する。
 wake_wordに指定したwordとそれ以外に分割し学習を進める。
 学習後、`wake_word_stop_model.h5`にモデルが保存される。
 
 Open **03-tflite-model-converter** and make sure that `keras_model_filename` points to the location of the .h5 model we created in the previous script. Run this script to convert the .h5 model into a .tflite model.
+
 ここでは、先ほどの`wake_word_stop_model.h5`をtfliteモデルに変換する。
 tfliteモデルは量子化が行われ、小規模なH/Wでも実行ができるモデルである。
 この変換により、ラズパイでもリアルタイムに応答できるモデルとなる。
 
 Copy the newly created **wake_word_stop_lite.tflite** and **04-rpi-tflite-audio-stream.py** files to the same directory somewhere on your Raspberry Pi. Run the **04-rpi-tflite-audio-stream.py** script. You should see numbers scrolling in the terminal that correspond to the output of the CNN; these are confidence levels that the last 1 second of captured audio contained the word "stop." If you say "stop," the program should print out the word. If you have an LED connected to pin 8, you should see it also flash briefly.
+
 03で作成したtfliteモデルをラズパイに乗せ、04を実行すると、CNNが動き、wake_wordに反応するようになる。
 そのまま実行した場合にはstopがwake_wordとして認識される。変えたい場合には02でwake_wordを変更する必要がある。
 
